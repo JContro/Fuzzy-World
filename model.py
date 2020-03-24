@@ -99,3 +99,7 @@ y_test = test_df[target_column]
 
 my_model = Model(X_train, y_train, X_dev, y_dev)
 my_model.train_RF()
+
+# print(my_model.grid_search())
+# The best model has the following parameters:
+# {'n_estimators': 1600, 'min_samples_split': 5, 'min_samples_leaf': 1, 'max_features': 'auto', 'max_depth': 10, 'bootstrap': True}
