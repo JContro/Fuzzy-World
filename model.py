@@ -1,11 +1,13 @@
 import pandas as pd
 import utils as u
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.metrics import roc_auc_score
-import matplotlib.pyplot as plt
-from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
+from model_utils import Model
+
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.model_selection import cross_val_score
+# from sklearn.metrics import classification_report, confusion_matrix
+# from sklearn.metrics import roc_auc_score
+# import matplotlib.pyplot as plt
+# from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
 
 
 pd.set_option('display.max_columns', 100)
@@ -95,69 +97,5 @@ y_test = test_df[target_column]
 # Train Random Forest model
 ###################################
 
-rfc = RandomForestClassifier()
-rfc.fit(X_train, y_train)
-
-train_rf_predictions = rfc.predict(X_train)
-train_rf_probs = rfc.predict_proba(X_train)[:, 1]
-
-# Actual class predictions
-rfc_predict = rfc.predict(X_dev)
-# Probabilities for each class
-rfc_probs = rfc.predict_proba(X_dev)[:, 1]
-
-
-# Calculate roc auc
-roc_value = roc_auc_score(y_dev, rfc_probs)
-
-# Plot formatting
-plt.style.use('fivethirtyeight')
-plt.rcParams['font.size'] = 18
-
-
-def evaluate_model(predictions, probs, train_predictions, train_probs):
-    """Compare machine learning model to baseline performance.
-    Computes statistics and shows ROC curve."""
-
-    baseline = {}
-
-    baseline['recall'] = recall_score(y_dev,
-                                      [1 for _ in range(len(y_dev))])
-    baseline['precision'] = precision_score(y_dev,
-                                            [1 for _ in range(len(y_dev))])
-    baseline['roc'] = 0.5
-
-    results = {}
-
-    results['recall'] = recall_score(y_dev, predictions)
-    results['precision'] = precision_score(y_dev, predictions)
-    results['roc'] = roc_auc_score(y_dev, probs)
-
-    train_results = {}
-    train_results['recall'] = recall_score(y_train, train_predictions)
-    train_results['precision'] = precision_score(y_train, train_predictions)
-    train_results['roc'] = roc_auc_score(y_train, train_probs)
-
-    for metric in ['recall', 'precision', 'roc']:
-        print(
-            f'{metric.capitalize()} Baseline: {round(baseline[metric], 2)} Test: {round(results[metric], 2)} Train: {round(train_results[metric], 2)}')
-
-    # Calculate false positive rates and true positive rates
-    base_fpr, base_tpr, _ = roc_curve(y_dev, [1 for _ in range(len(y_dev))])
-    model_fpr, model_tpr, _ = roc_curve(y_dev, probs)
-
-    plt.figure(figsize=(8, 6))
-    plt.rcParams['font.size'] = 16
-
-    # Plot both curves
-    plt.plot(base_fpr, base_tpr, 'b', label='baseline')
-    plt.plot(model_fpr, model_tpr, 'r', label='model')
-    plt.legend()
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('ROC Curves')
-    plt.show()
-
-
-evaluate_model(rfc_predict, rfc_probs, train_rf_predictions, train_rf_probs)
-plt.savefig('roc_auc_curve.png')
+my_model = Model(X_train, y_train, X_dev, y_dev)
+my_model.train_RF()
