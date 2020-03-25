@@ -5,8 +5,7 @@ from sklearn.model_selection import RandomizedSearchCV
 import numpy as np
 
 
-class Model():
-
+class Model:
     def __init__(self, X_train, y_train, X_dev, y_dev):
         self.X_train = X_train
         self.y_train = y_train
@@ -24,46 +23,64 @@ class Model():
         :return:
         """
 
-        baseline = {'recall': recall_score(self.y_dev, [1 for _ in range(len(self.y_dev))]),
-                    'precision': precision_score(self.y_dev, [1 for _ in range(len(self.y_dev))]), 'roc': 0.5}
+        baseline = {
+            "recall": recall_score(self.y_dev, [1 for _ in range(len(self.y_dev))]),
+            "precision": precision_score(
+                self.y_dev, [1 for _ in range(len(self.y_dev))]
+            ),
+            "roc": 0.5,
+        }
 
-        results = {'recall': recall_score(self.y_dev, predictions),
-                   'precision': precision_score(self.y_dev, predictions),
-                   'roc': roc_auc_score(self.y_dev, probs)}
+        results = {
+            "recall": recall_score(self.y_dev, predictions),
+            "precision": precision_score(self.y_dev, predictions),
+            "roc": roc_auc_score(self.y_dev, probs),
+        }
 
-        train_results = {'recall': recall_score(self.y_train, train_predictions),
-                         'precision': precision_score(self.y_train, train_predictions),
-                         'roc': roc_auc_score(self.y_train, train_probs)}
+        train_results = {
+            "recall": recall_score(self.y_train, train_predictions),
+            "precision": precision_score(self.y_train, train_predictions),
+            "roc": roc_auc_score(self.y_train, train_probs),
+        }
 
-        for metric in ['recall', 'precision', 'roc']:
+        for metric in ["recall", "precision", "roc"]:
             print(
-                f'{metric.capitalize()} Baseline: {round(baseline[metric], 2)} Test: {round(results[metric], 2)} Train: {round(train_results[metric], 2)}')
+                f"{metric.capitalize()} Baseline: {round(baseline[metric], 2)} Test: {round(results[metric], 2)} Train: {round(train_results[metric], 2)}"
+            )
 
         # Calculate false positive rates and true positive rates
-        base_fpr, base_tpr, _ = roc_curve(self.y_dev, [1 for _ in range(len(self.y_dev))])
+        base_fpr, base_tpr, _ = roc_curve(
+            self.y_dev, [1 for _ in range(len(self.y_dev))]
+        )
         model_fpr, model_tpr, _ = roc_curve(self.y_dev, probs)
 
         plt.figure(figsize=(8, 6))
-        plt.rcParams['font.size'] = 16
+        plt.rcParams["font.size"] = 16
 
         # Plot both curves
-        plt.plot(base_fpr, base_tpr, 'b', label='baseline')
-        plt.plot(model_fpr, model_tpr, 'r', label='model')
+        plt.plot(base_fpr, base_tpr, "b", label="baseline")
+        plt.plot(model_fpr, model_tpr, "r", label="model")
         plt.legend()
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('ROC Curves')
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title("ROC Curves")
         plt.show()
 
-    def train_RF(self):
+    def train_RF(self, return_classifier=False):
         """
 
         :param feature_columns:
         :param target_column:
         :return:
         """
-        rfc = RandomForestClassifier(n_estimators=1600, min_samples_split=5, min_samples_leaf=1, max_features='auto',
-                                     max_depth=10, bootstrap=True)
+        rfc = RandomForestClassifier(
+            n_estimators=1600,
+            min_samples_split=5,
+            min_samples_leaf=1,
+            max_features="auto",
+            max_depth=10,
+            bootstrap=True,
+        )
         rfc.fit(self.X_train, self.y_train)
         train_rf_predictions = rfc.predict(self.X_train)
         train_rf_probs = rfc.predict_proba(self.X_train)[:, 1]
@@ -71,8 +88,13 @@ class Model():
         rfc_predict = rfc.predict(self.X_dev)
         # Probabilities for each class
         rfc_probs = rfc.predict_proba(self.X_dev)[:, 1]
-        self.evaluate_model(rfc_predict, rfc_probs, train_rf_predictions, train_rf_probs)
-        plt.savefig('roc_auc_curve.png')
+        self.evaluate_model(
+            rfc_predict, rfc_probs, train_rf_predictions, train_rf_probs
+        )
+        plt.savefig("roc_auc_curve.png")
+
+        if return_classifier:
+            return rfc
 
     def grid_search(self):
         """
@@ -82,7 +104,7 @@ class Model():
         # Number of trees in random forest
         n_estimators = [int(x) for x in np.linspace(start=200, stop=2000, num=10)]
         # Number of features to consider at every split
-        max_features = ['auto', 'sqrt']
+        max_features = ["auto", "sqrt"]
         # Maximum number of levels in tree
         max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
         max_depth.append(None)
@@ -92,16 +114,25 @@ class Model():
         min_samples_leaf = [1, 2, 4]
         # Method of selecting samples for training each tree
         bootstrap = [True, False]  # Create the random grid
-        random_grid = {'n_estimators': n_estimators,
-                       'max_features': max_features,
-                       'max_depth': max_depth,
-                       'min_samples_split': min_samples_split,
-                       'min_samples_leaf': min_samples_leaf,
-                       'bootstrap': bootstrap}
+        random_grid = {
+            "n_estimators": n_estimators,
+            "max_features": max_features,
+            "max_depth": max_depth,
+            "min_samples_split": min_samples_split,
+            "min_samples_leaf": min_samples_leaf,
+            "bootstrap": bootstrap,
+        }
 
         rf = RandomForestClassifier()
-        rf_random = RandomizedSearchCV(estimator=rf, param_distributions=random_grid, n_iter=100, cv=3, verbose=2,
-                                       random_state=42, n_jobs=-1)  # Fit the random search model
+        rf_random = RandomizedSearchCV(
+            estimator=rf,
+            param_distributions=random_grid,
+            n_iter=100,
+            cv=3,
+            verbose=2,
+            random_state=42,
+            n_jobs=-1,
+        )  # Fit the random search model
         rf_random.fit(self.X_train, self.y_train)
 
         return rf_random.best_params_
