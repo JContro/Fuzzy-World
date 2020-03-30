@@ -5,8 +5,8 @@ from sklearn.metrics import plot_confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.utils import resample
 
-import utils as u
-from model_utils import Model
+from old_shit import utils as u
+from old_shit.model_utils import Model
 
 # from sklearn.ensemble import RandomForestClassifier
 # from sklearn.model_selection import cross_val_score
